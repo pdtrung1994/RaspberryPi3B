@@ -10,12 +10,12 @@ def authenticate():
     creds = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes = SCOPES)
     return creds
 
-def upload(file_path):
+def upload(file_path,file_name):
     creds = authenticate()
     service = build('drive', 'v3', credentials=creds)
 
     file_metadata = {
-        'name' : "Hello.py",
+        'name' : file_name,
         'parents' : [PARENT_FOLDER_ID]
     }
 
@@ -24,4 +24,4 @@ def upload(file_path):
         media_body = file_path
     ).execute()
 
-upload("weight_test.py")
+# upload("/home/pi/FTP/data/air/1.csv", "test.csv")
