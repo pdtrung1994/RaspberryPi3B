@@ -18,4 +18,6 @@ need to add permission
 
 need 'sudo apt-get install ntp' to config datetime for google api
 
+run at starup - @reboot cd /home/pi/FTP/code/ && python3 read_mq_voltage.py
+
 
