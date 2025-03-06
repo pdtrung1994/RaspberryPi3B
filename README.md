@@ -21,7 +21,7 @@ need 'sudo apt-get install ntp' to config datetime for google api
 run at starup - @reboot cd /home/pi/FTP/code/ && python3 read_mq_voltage.py
 
 NOTE 2:
-
+```
 On a new Rashberry Pi
 - Connect SD card to PC -> install rashberry PI OS: https://www.raspberrypi.com/software/ (can setting user & wifi)
 - Connect SD card back to rashberry PI -> connect RPI to monitor -> should working
@@ -38,3 +38,4 @@ if you want to send file to RPI
 download PuTTY -> redirect to PuTTy folder to use pscp
 -> pscp.exe -P 22 -pw <password-here> "<pc-file-path>" <user>@<RPI-ip-here>:<RPI-file-path>
 * example : pscp.exe -P 22 -pw azure "D:\python\code\data_collection.py" azure@192.168.0.43:/home/azure/code/example.py
+```
