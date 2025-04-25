@@ -5,6 +5,9 @@
 
 [Click here if not redirected](index.html)
 
+
+GUIDE & Summary Support
+
 pip install google-api-python-client
 
 pip install RPi.GPIO
