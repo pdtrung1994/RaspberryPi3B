@@ -1,6 +1,6 @@
 <meta http-equiv="refresh" content="0; url=./index.html" />
 
-# Your Project Name
+# RaspberryPi3B
 *(This README is visible only on GitHub, not on GitHub Pages)*
 
 [Click here if not redirected](index.html)
