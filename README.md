@@ -1,3 +1,10 @@
+<meta http-equiv="refresh" content="0; url=./index.html" />
+
+# Your Project Name
+*(This README is visible only on GitHub, not on GitHub Pages)*
+
+[Click here if not redirected](index.html)
+
 pip install google-api-python-client
 
 pip install RPi.GPIO
