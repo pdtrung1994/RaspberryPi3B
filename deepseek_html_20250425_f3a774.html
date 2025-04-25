@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Files Viewer</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        /* Your existing CSS remains unchanged */
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1 { color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        button { padding: 5px 10px; margin: 2px; cursor: pointer; color: white; border: none; border-radius: 4px; }
+        button:hover { opacity: 0.9; }
+        button.view { background-color: #4CAF50; }
+        button.graph { background-color: #2196F3; }
+        button.metadata { background-color: #ff9800; }
+        #graph-container { margin-top: 30px; width: 100%; height: 500px; }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 20px; border: 1px solid #888; width: 80%; height: 80%; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>CSV Files in Folder</h1>
+    <table id="files-table">
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="files-list">
+            <!-- Files will be added here by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- Graph Modal -->
+    <div id="graph-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="graph-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // Replace with your deployed Apps Script URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwbQu9co3DXW8zOuik3uqJ4af2n4ScdafoMiICeSvy68xhDeJ7Ay3Hxf4ZDzWMaiYlcrw/exec";
+        
+        async function loadCSVFiles() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=list`);
+                const data = await response.json();
+                
+                if (data.files && data.files.length > 0) {
+                    const filesList = document.getElementById('files-list');
+                    filesList.innerHTML = '';
+                    
+                    const csvFiles = data.files.filter(file => file.name.endsWith('.csv'));
+                    const txtFiles = data.files.filter(file => file.name.endsWith('.txt'));
+                    
+                    csvFiles.forEach(csvFile => {
+                        const row = document.createElement('tr');
+                        
+                        // File Name
+                        const nameCell = document.createElement('td');
+                        nameCell.textContent = csvFile.name;
+                        
+                        // Action Buttons
+                        const actionsCell = document.createElement('td');
+                        
+                        // View Button
+                        const viewButton = document.createElement('button');
+                        viewButton.textContent = 'View';
+                        viewButton.className = 'view';
+                        viewButton.onclick = () => {
+                            window.open(`${SCRIPT_URL}?action=view&id=${csvFile.id}`, '_blank');
+                        };
+                        
+                        // Graph Button
+                        const graphButton = document.createElement('button');
+                        graphButton.textContent = 'Graph';
+                        graphButton.className = 'graph';
+                        graphButton.onclick = () => visualizeCSV(csvFile.id, csvFile.name);
+                        
+                        // Metadata Button
+                        const metadataButton = document.createElement('button');
+                        metadataButton.textContent = 'Metadata';
+                        metadataButton.className = 'metadata';
+                        metadataButton.onclick = () => {
+                            const txtFile = txtFiles.find(f => 
+                                f.name.toLowerCase() === csvFile.name.toLowerCase().replace('.csv', '.txt')
+                            );
+                            if (txtFile) {
+                                window.open(`${SCRIPT_URL}?action=metadata&id=${txtFile.id}`, '_blank');
+                            } else {
+                                alert(`No metadata found for ${csvFile.name}`);
+                            }
+                        };
+                        
+                        // Assemble row
+                        actionsCell.append(viewButton, graphButton, metadataButton);
+                        row.append(nameCell, actionsCell);
+                        filesList.appendChild(row);
+                    });
+                } else {
+                    document.getElementById('files-list').innerHTML = 
+                        '<tr><td colspan="2">No CSV files found</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('files-list').innerHTML = 
+                    `<tr><td colspan="2">Error loading files: ${error.message}</td></tr>`;
+            }
+        }
+
+        async function visualizeCSV(fileId, fileName) {
+            try {
+                document.getElementById('graph-container').innerHTML = '<p>Loading data...</p>';
+                document.getElementById('graph-modal').style.display = 'block';
+                
+                const response = await fetch(`${SCRIPT_URL}?action=get&id=${fileId}`);
+                const csvData = await response.text();
+                
+                // Parse CSV
+                const lines = csvData.split('\n');
+                const datetime = [], mq2 = [], mq3 = [], mq5 = [], mq7 = [], mq8 = [], mq135 = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(',');
+                    if (values.length < 7) continue;
+                    
+                    datetime.push(values[0]);
+                    mq2.push(parseFloat(values[1]) || 0);
+                    mq3.push(parseFloat(values[2]) || 0);
+                    mq5.push(parseFloat(values[3]) || 0);
+                    mq7.push(parseFloat(values[4]) || 0);
+                    mq8.push(parseFloat(values[5]) || 0);
+                    mq135.push(parseFloat(values[6]) || 0);
+                }
+                
+                // Plot data
+                Plotly.newPlot('graph-container', [
+                    { x: datetime, y: mq2, name: 'MQ2', mode: 'lines' },
+                    { x: datetime, y: mq3, name: 'MQ3', mode: 'lines' },
+                    { x: datetime, y: mq5, name: 'MQ5', mode: 'lines' },
+                    { x: datetime, y: mq7, name: 'MQ7', mode: 'lines' },
+                    { x: datetime, y: mq8, name: 'MQ8', mode: 'lines' },
+                    { x: datetime, y: mq135, name: 'MQ135', mode: 'lines' }
+                ], {
+                    title: `Sensor Data: ${fileName}`,
+                    xaxis: { title: 'DateTime' },
+                    yaxis: { title: 'Sensor Value' }
+                });
+                
+            } catch (error) {
+                document.getElementById('graph-container').innerHTML = `
+                    <p>Error visualizing data: ${error.message}</p>
+                    <button onclick="window.location.reload()">Retry</button>
+                `;
+            }
+        }
+        
+        // Close modal handlers
+        document.querySelector('.close').onclick = () => 
+            document.getElementById('graph-modal').style.display = 'none';
+        
+        window.onclick = (event) => {
+            if (event.target === document.getElementById('graph-modal')) {
+                document.getElementById('graph-modal').style.display = 'none';
+            }
+        };
+        
+        // Initialize
+        window.onload = loadCSVFiles;
+    </script>
+</body>
+</html>
